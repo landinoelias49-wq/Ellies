@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>ELLIES!!!</title>
+<style>
+    body {
+        margin: 0; 
+        background: #000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    h1 {
+        font-size: 6rem;
+        animation: rainbow 2s infinite linear, move 3s infinite ease-in-out alternate;
+    }
+
+    @keyframes rainbow {
+        0% {color: red;}
+        20% {color: orange;}
+        40% {color: yellow;}
+        60% {color: lime;}
+        80% {color: cyan;}
+        100% {color: magenta;}
+    }
+
+    @keyframes move {
+        0% { transform: translateX(-80px); }
+        100% { transform: translateX(80px); }
+    }
+</style>
+</head>
+<body>
+<h1>ELLIES!!!</h1>
+</body>
+</html>
