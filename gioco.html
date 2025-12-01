@@ -24,57 +24,71 @@ let score = 0;
 const scoreDiv = document.getElementById("score");
 const winDiv = document.getElementById("winMessage");
 
-// Ellies
-let ellies = {x: canvas.width/2, y: canvas.height-120, width:60, height:100};
+// Aereo e Ellies
+let plane = {x:100, y:50, width:150, height:50, dx:3};
+let ellies = {x:0, y:0, width:60, height:100};
 
-// Torri uffici
-const towers = [];
-for(let i=0;i<5;i++){
-    towers.push({x:100+i*200, y:200, width:80, height:200, destroyed:false});
+// Palazzi
+const buildings = [];
+for(let i=0;i<6;i++){
+    let w = 80 + Math.random()*40;
+    let h = 150 + Math.random()*200;
+    buildings.push({x:50+i*200, y:canvas.height-h, width:w, height:h, destroyed:false});
 }
 
 // Gavettoni
 const balls = [];
 
 window.addEventListener("keydown",(e)=>{
-    if(e.key==="ArrowLeft") ellies.x -=20;
-    if(e.key==="ArrowRight") ellies.x +=20;
-    if(e.key===" ") balls.push({x:ellies.x+ellies.width/2, y:ellies.y, radius:10, dy:-7});
+    if(e.key===" ") balls.push({x:plane.x + plane.width/2, y:plane.y+20, radius:10, dy:7});
 });
 
-function drawEllies(){
-    // Corpo
+function drawPlane(){
+    // Corpo aereo
+    ctx.fillStyle="gray";
+    ctx.fillRect(plane.x, plane.y, plane.width, plane.height);
+    // Ala
+    ctx.fillStyle="darkgray";
+    ctx.fillRect(plane.x+30, plane.y-20, 90, 20);
+    // Ellies sopra aereo
+    ellies.x = plane.x + plane.width/2 - ellies.width/2;
+    ellies.y = plane.y - ellies.height;
     ctx.fillStyle="white";
-    ctx.beginPath();
-    ctx.moveTo(ellies.x, ellies.y);
-    ctx.lineTo(ellies.x, ellies.y+ellies.height);
-    ctx.lineTo(ellies.x+ellies.width, ellies.y+ellies.height);
-    ctx.lineTo(ellies.x+ellies.width, ellies.y);
-    ctx.closePath();
-    ctx.fill();
+    ctx.fillRect(ellies.x, ellies.y, ellies.width, ellies.height);
     // Testa
     ctx.fillStyle="#f1c27d";
     ctx.beginPath();
-    ctx.arc(ellies.x+ellies.width/2, ellies.y-20, 30,0,Math.PI*2);
+    ctx.arc(ellies.x + ellies.width/2, ellies.y-20, 30,0,Math.PI*2);
     ctx.fill();
     // Barba
     ctx.strokeStyle="#654321";
     ctx.lineWidth=4;
     ctx.beginPath();
-    ctx.arc(ellies.x+ellies.width/2, ellies.y-10, 20,0,Math.PI,false);
+    ctx.arc(ellies.x + ellies.width/2, ellies.y-10, 20,0,Math.PI,false);
     ctx.stroke();
+    // Occhi
+    ctx.fillStyle="white";
+    ctx.beginPath();
+    ctx.arc(ellies.x + ellies.width/2 -10, ellies.y-25, 5,0,Math.PI*2);
+    ctx.arc(ellies.x + ellies.width/2 +10, ellies.y-25, 5,0,Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle="black";
+    ctx.beginPath();
+    ctx.arc(ellies.x + ellies.width/2 -10, ellies.y-25, 2,0,Math.PI*2);
+    ctx.arc(ellies.x + ellies.width/2 +10, ellies.y-25, 2,0,Math.PI*2);
+    ctx.fill();
 }
 
-function drawTowers(){
-    towers.forEach(t=>{
-        if(!t.destroyed){
+function drawBuildings(){
+    buildings.forEach(b=>{
+        if(!b.destroyed){
             ctx.fillStyle="#555";
-            ctx.fillRect(t.x,t.y,t.width,t.height);
+            ctx.fillRect(b.x,b.y,b.width,b.height);
             // finestre
             ctx.fillStyle="#fffae3";
-            for(let wx=5;wx<t.width-10;wx+=20){
-                for(let wy=5;wy<t.height-10;wy+=20){
-                    ctx.fillRect(t.x+wx,t.y+wy,10,10);
+            for(let wx=5;wx<b.width-10;wx+=20){
+                for(let wy=5;wy<b.height-10;wy+=20){
+                    ctx.fillRect(b.x+wx,b.y+wy,10,10);
                 }
             }
         }
@@ -89,35 +103,39 @@ function drawBalls(){
         ctx.fill();
         b.y += b.dy;
 
-        // Collisione con torri
-        towers.forEach(t=>{
-            if(!t.destroyed && b.x>t.x && b.x<t.x+t.width && b.y-b.radius<t.y+t.height && b.y+b.radius>t.y){
-                t.destroyed=true;
+        // Collisione con palazzi
+        buildings.forEach(bld=>{
+            if(!bld.destroyed && b.x>bld.x && b.x<bld.x+bld.width && b.y-b.radius<bld.y+bld.height && b.y+b.radius>bld.y){
+                bld.destroyed=true;
                 balls.splice(i,1);
                 score += 200;
                 scoreDiv.textContent="Punteggio: "+score;
                 if(score>=1000){
-                    towers.forEach(t2=>t2.destroyed=true);
+                    buildings.forEach(b2=>b2.destroyed=true);
                     winDiv.style.display="block";
                 }
             }
         });
 
         // fuori schermo
-        if(b.y<0) balls.splice(i,1);
+        if(b.y>canvas.height) balls.splice(i,1);
     });
 }
 
 function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    drawEllies();
-    drawTowers();
+    // Movimento aereo
+    plane.x += plane.dx;
+    if(plane.x + plane.width>canvas.width || plane.x<0) plane.dx*=-1;
+
+    drawPlane();
+    drawBuildings();
     drawBalls();
     requestAnimationFrame(animate);
 }
 animate();
 </script>
-<p style="color:white; position:absolute; bottom:10px; left:10px;">Usa frecce sinistra/destra e spazio per lanciare gavettoni</p>
+<p style="color:white; position:absolute; bottom:10px; left:10px;">Premi SPAZIO per lanciare i gavettoni</p>
 </body>
 </html>
 
