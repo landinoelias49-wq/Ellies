@@ -2,49 +2,199 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Menu principale</title>
+<title>Benvenuto su Ellies!</title>
 <style>
-    body {
-        background: #111;
-        color: white;
-        font-family: Arial, sans-serif;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        gap: 20px;
-        text-align: center;
-    }
+/* Stile base */
+body {
+    margin: 0;
+    font-family: 'Arial', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
+    background-size: 600% 600%;
+    animation: gradientBG 20s ease infinite;
+}
 
-    h1 {
-        font-size: 3rem;
-    }
+/* Animazione sfondo */
+@keyframes gradientBG {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
 
-    .btn {
-        padding: 15px 25px;
-        font-size: 1.5rem;
-        background: #444;
-        border-radius: 10px;
-        color: white;
-        text-decoration: none;
-        width: 300px;
-        transition: 0.2s;
-    }
+/* Titolo */
+h1 {
+    font-size: 4rem;
+    color: white;
+    text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
+    text-align: center;
+    margin-bottom: 50px;
+    background: linear-gradient(90deg, #fffa00, #ff6ec4, #6a5af9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: titleAnim 3s ease-in-out infinite alternate;
+}
 
-    .btn:hover {
-        background: #666;
-        transform: scale(1.05);
-    }
+@keyframes titleAnim {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Contenitore pulsanti */
+.menu {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+/* Pulsanti stilizzati */
+.btn {
+    padding: 20px 40px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    background: linear-gradient(45deg, #ff6ec4, #7873f5);
+    color: white;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    transition: 0.3s;
+    width: 320px;
+    text-align: center;
+    text-decoration: none;
+}
+
+.btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.5);
+    background: linear-gradient(45deg, #ffb199, #6a5af9);
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+/* Ellies sullo sfondo */
+#ellies-bg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    opacity: 0.2;
+    z-index: 1;
+}
+
+/* Particelle colorate */
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: 0.8;
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
 
-<h1>Benvenuto!</h1>
+<!-- Ellies sullo sfondo -->
+<canvas id="ellies-bg" width="600" height="600"></canvas>
 
-<a class="btn" href="ellies.html">✨ Ellies Multicolor</a>
-<a class="btn" href="gioco.html">🎮 Gioco dei Gavettoni</a>
-<a class="btn" href="filmato.html">🎬 Filmato “ELLIES!!!”</a>
+<div>
+    <h1>Benvenuto su Ellies!</h1>
+    <div class="menu">
+        <a class="btn" href="ellies.html">✨ Ellies Multicolor</a>
+        <a class="btn" href="gioco.html">🎮 Gioco dei Gavettoni</a>
+        <a class="btn" href="filmato.html">🎬 Filmato “ELLIES!!!”</a>
+    </div>
+</div>
+
+<script>
+// Disegno Ellies sullo sfondo
+const canvas = document.getElementById("ellies-bg");
+const ctx = canvas.getContext("2d");
+
+function drawElliesBG() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Tunica bianca
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(300, 350);
+    ctx.lineTo(250, 500);
+    ctx.lineTo(350, 500);
+    ctx.closePath();
+    ctx.fill();
+
+    // Testa
+    ctx.fillStyle = "#f1c27d";
+    ctx.beginPath();
+    ctx.arc(300, 250, 50, 0, Math.PI*2);
+    ctx.fill();
+
+    // Barba
+    ctx.strokeStyle = "#654321";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(300, 270, 30, 0, Math.PI, false);
+    ctx.stroke();
+
+    // Occhi
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(285, 240, 10, 0, Math.PI*2);
+    ctx.arc(315, 240, 10, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(285, 240, 5, 0, Math.PI*2);
+    ctx.arc(315, 240, 5, 0, Math.PI*2);
+    ctx.fill();
+}
+
+drawElliesBG();
+
+// Particelle colorate in movimento
+const colors = ["#ff6ec4","#6a5af9","#fffa00","#00fff0","#ff7f50"];
+const particles = [];
+
+for(let i=0;i<50;i++){
+    particles.push({
+        x: Math.random()*window.innerWidth,
+        y: Math.random()*window.innerHeight,
+        size: Math.random()*8+4,
+        color: colors[Math.floor(Math.random()*colors.length)],
+        dx: (Math.random()-0.5)*1.5,
+        dy: (Math.random()-0.5)*1.5
+    });
+}
+
+function drawParticles(){
+    particles.forEach(p=>{
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+        ctx.fill();
+
+        p.x += p.dx;
+        p.y += p.dy;
+
+        if(p.x<0) p.x=canvas.width;
+        if(p.x>canvas.width) p.x=0;
+        if(p.y<0) p.y=canvas.height;
+        if(p.y>canvas.height) p.y=0;
+    });
+    requestAnimationFrame(drawParticles);
+}
+
+drawParticles();
+</script>
 
 </body>
 </html>
+
