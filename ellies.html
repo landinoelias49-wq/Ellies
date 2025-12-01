@@ -2,35 +2,31 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>ELLIES!!!</title>
+<title>Ellies Multicolor</title>
 <style>
-    body {
-        margin: 0; 
-        background: #000;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-    }
-
-    h1 {
-        font-size: 6rem;
-        animation: rainbow 2s infinite linear, move 3s infinite ease-in-out alternate;
-    }
-
-    @keyframes rainbow {
-        0% {color: red;}
-        20% {color: orange;}
-        40% {color: yellow;}
-        60% {color: lime;}
-        80% {color: cyan;}
-        100% {color: magenta;}
-    }
-
-    @keyframes move {
-        0% { transform: translateX(-80px); }
-        100% { transform: translateX(80px); }
-    }
+body {
+    margin:0;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    background:black;
+    overflow:hidden;
+    font-family:sans-serif;
+}
+h1 {
+    font-size:6rem;
+    font-weight:bold;
+    background: linear-gradient(90deg,#ff6ec4,#6a5af9,#fffa00,#00fff0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: colorShift 3s infinite linear;
+}
+@keyframes colorShift {
+    0%{background-position:0% 50%;}
+    50%{background-position:100% 50%;}
+    100%{background-position:0% 50%;}
+}
 </style>
 </head>
 <body>
