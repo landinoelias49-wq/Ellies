@@ -2,142 +2,122 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Benvenuto su Ellies!</title>
+<title>Gioco dei Gavettoni</title>
 <style>
-body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
-    background-size: 600% 600%;
-    animation: gradientBG 20s ease infinite;
-}
-
-@keyframes gradientBG {
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-}
-
-h1 {
-    font-size: 4rem;
-    color: white;
-    text-shadow: 2px 2px 10px rgba(0,0,0,0.5);
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-/* Contenitore pulsanti */
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-}
-
-/* Pulsanti principali */
-.btn {
-    padding: 20px 40px;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    background: linear-gradient(45deg, #ff6ec4, #7873f5);
-    color: white;
-    box-shadow: 0 8px 15px rgba(0,0,0,0.3);
-    transition: 0.3s;
-    width: 300px;
-    text-align: center;
-    text-decoration: none;
-}
-
-.btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 12px 20px rgba(0,0,0,0.5);
-    background: linear-gradient(45deg, #ffb199, #6a5af9);
-}
-
-.btn:active {
-    transform: scale(0.95);
-}
-
-/* Ellies sullo sfondo */
-#ellies-bg {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.2;
-    z-index: 1;
-}
+body { margin:0; overflow:hidden; background:skyblue; font-family:Arial;}
+canvas { display:block; margin:auto; background:#87ceeb;}
+#score {position:absolute; top:10px; left:10px; font-size:2rem; color:white; text-shadow:2px 2px 5px black;}
+#winMessage {position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:4rem; color:yellow; text-shadow:3px 3px 10px black; display:none;}
 </style>
 </head>
 <body>
-
-<!-- Ellies sullo sfondo -->
-<canvas id="ellies-bg" width="600" height="600"></canvas>
-
-<div>
-    <h1>Benvenuto su Ellies!</h1>
-    <div class="menu">
-        <a class="btn" href="ellies.html">✨ Ellies Multicolor</a>
-        <a class="btn" href="gioco.html">🎮 Gioco dei Gavettoni</a>
-        <a class="btn" href="filmato.html">🎬 Filmato “ELLIES!!!”</a>
-    </div>
-</div>
-
+<div id="score">Punteggio: 0</div>
+<div id="winMessage">ELLIES HA VINTO!!! 🎉</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
 <script>
-const canvas = document.getElementById("ellies-bg");
+const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-// Disegniamo Ellies sullo sfondo (versione grande e trasparente)
-function drawElliesBG() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    
-    // Corpo (tunica bianca)
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(300, 350);
-    ctx.lineTo(250, 500);
-    ctx.lineTo(350, 500);
-    ctx.closePath();
-    ctx.fill();
+let score = 0;
+const scoreDiv = document.getElementById("score");
+const winDiv = document.getElementById("winMessage");
 
-    // Testa
-    ctx.fillStyle = "#f1c27d";
-    ctx.beginPath();
-    ctx.arc(300, 250, 50, 0, Math.PI*2);
-    ctx.fill();
+// Ellies
+let ellies = {x: canvas.width/2, y: canvas.height-120, width:60, height:100};
 
-    // Barba
-    ctx.strokeStyle = "#654321";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(300, 270, 30, 0, Math.PI, false);
-    ctx.stroke();
-
-    // Occhi
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(285, 240, 10, 0, Math.PI*2);
-    ctx.arc(315, 240, 10, 0, Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.arc(285, 240, 5, 0, Math.PI*2);
-    ctx.arc(315, 240, 5, 0, Math.PI*2);
-    ctx.fill();
+// Torri uffici
+const towers = [];
+for(let i=0;i<5;i++){
+    towers.push({x:100+i*200, y:200, width:80, height:200, destroyed:false});
 }
 
-drawElliesBG();
-</script>
+// Gavettoni
+const balls = [];
 
+window.addEventListener("keydown",(e)=>{
+    if(e.key==="ArrowLeft") ellies.x -=20;
+    if(e.key==="ArrowRight") ellies.x +=20;
+    if(e.key===" ") balls.push({x:ellies.x+ellies.width/2, y:ellies.y, radius:10, dy:-7});
+});
+
+function drawEllies(){
+    // Corpo
+    ctx.fillStyle="white";
+    ctx.beginPath();
+    ctx.moveTo(ellies.x, ellies.y);
+    ctx.lineTo(ellies.x, ellies.y+ellies.height);
+    ctx.lineTo(ellies.x+ellies.width, ellies.y+ellies.height);
+    ctx.lineTo(ellies.x+ellies.width, ellies.y);
+    ctx.closePath();
+    ctx.fill();
+    // Testa
+    ctx.fillStyle="#f1c27d";
+    ctx.beginPath();
+    ctx.arc(ellies.x+ellies.width/2, ellies.y-20, 30,0,Math.PI*2);
+    ctx.fill();
+    // Barba
+    ctx.strokeStyle="#654321";
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.arc(ellies.x+ellies.width/2, ellies.y-10, 20,0,Math.PI,false);
+    ctx.stroke();
+}
+
+function drawTowers(){
+    towers.forEach(t=>{
+        if(!t.destroyed){
+            ctx.fillStyle="#555";
+            ctx.fillRect(t.x,t.y,t.width,t.height);
+            // finestre
+            ctx.fillStyle="#fffae3";
+            for(let wx=5;wx<t.width-10;wx+=20){
+                for(let wy=5;wy<t.height-10;wy+=20){
+                    ctx.fillRect(t.x+wx,t.y+wy,10,10);
+                }
+            }
+        }
+    });
+}
+
+function drawBalls(){
+    balls.forEach((b,i)=>{
+        ctx.fillStyle="blue";
+        ctx.beginPath();
+        ctx.arc(b.x,b.y,b.radius,0,Math.PI*2);
+        ctx.fill();
+        b.y += b.dy;
+
+        // Collisione con torri
+        towers.forEach(t=>{
+            if(!t.destroyed && b.x>t.x && b.x<t.x+t.width && b.y-b.radius<t.y+t.height && b.y+b.radius>t.y){
+                t.destroyed=true;
+                balls.splice(i,1);
+                score += 200;
+                scoreDiv.textContent="Punteggio: "+score;
+                if(score>=1000){
+                    towers.forEach(t2=>t2.destroyed=true);
+                    winDiv.style.display="block";
+                }
+            }
+        });
+
+        // fuori schermo
+        if(b.y<0) balls.splice(i,1);
+    });
+}
+
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawEllies();
+    drawTowers();
+    drawBalls();
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+<p style="color:white; position:absolute; bottom:10px; left:10px;">Usa frecce sinistra/destra e spazio per lanciare gavettoni</p>
 </body>
 </html>
+
