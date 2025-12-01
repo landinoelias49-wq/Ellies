@@ -2,110 +2,52 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Benvenuto su Ellies!</title>
+<title>Filmato Ellies</title>
 <style>
-body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
-    background-size: 600% 600%;
-    animation: gradientBG 20s ease infinite;
-}
-
-/* Animazione gradient */
-@keyframes gradientBG {
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-}
-
-/* Titolo */
-h1 {
-    font-size: 4rem;
-    color: white;
-    text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
-    text-align: center;
-    margin-bottom: 50px;
-}
-
-/* Pulsanti */
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-}
-
-.btn {
-    padding: 20px 40px;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    background: linear-gradient(45deg, #ff6ec4, #7873f5);
-    color: white;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    transition: 0.3s;
-    width: 320px;
-    text-align: center;
-    text-decoration: none;
-}
-
-.btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-    background: linear-gradient(45deg, #ffb199, #6a5af9);
-}
-
-.btn:active {
-    transform: scale(0.95);
-}
-
-/* Canvas sfondo Ellies e particelle */
-#bgCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
+body { margin:0; overflow:hidden; background:black; display:flex; justify-content:center; align-items:center; height:100vh;}
+canvas { background:#222; }
 </style>
 </head>
 <body>
-
-<canvas id="bgCanvas"></canvas>
-
-<div>
-    <h1>Benvenuto su Ellies!</h1>
-    <div class="menu">
-        <a class="btn" href="ellies.html">✨ Ellies Multicolor</a>
-        <a class="btn" href="gioco.html">🎮 Gioco dei Gavettoni</a>
-        <a class="btn" href="filmato.html">🎬 Filmato “ELLIES!!!”</a>
-    </div>
-</div>
-
+<canvas id="animCanvas" width="800" height="600"></canvas>
 <script>
-const canvas = document.getElementById("bgCanvas");
+const canvas = document.getElementById("animCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let frame = 0;
 
-// Ellies sullo sfondo
-function drawEllies(x, y, scale=1) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-    // Tunica
-    ctx.fillStyle = "white";
+function drawEllies(x,y){
+    ctx.fillStyle="white";
     ctx.beginPath();
-    ctx.moveTo(0, 100);
-    ctx.lineTo(-50,
+    ctx.moveTo(x, y);
+    ctx.lineTo(x, y+100);
+    ctx.lineTo(x+60, y+100);
+    ctx.lineTo(x+60, y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle="#f1c27d";
+    ctx.beginPath();
+    ctx.arc(x+30, y-20, 30,0,Math.PI*2);
+    ctx.fill();
+    ctx.strokeStyle="#654321";
+    ctx.lineWidth=4;
+    ctx.beginPath();
+    ctx.arc(x+30, y-10, 20,0,Math.PI,false);
+    ctx.stroke();
+}
+
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let x = 300 + 50*Math.sin(frame*0.1);
+    drawEllies(x, 400);
+    ctx.fillStyle="yellow";
+    ctx.font="bold 60px Arial";
+    ctx.fillText("ELLIES!!!", 250, 200 + 20*Math.sin(frame*0.1));
+    frame++;
+    requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
 
 
