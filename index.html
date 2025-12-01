@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <title>Benvenuto su Ellies!</title>
 <style>
-/* Stile base */
 body {
     margin: 0;
     font-family: 'Arial', sans-serif;
@@ -17,34 +16,18 @@ body {
     background-size: 600% 600%;
     animation: gradientBG 20s ease infinite;
 }
-
-/* Animazione sfondo */
 @keyframes gradientBG {
     0%{background-position:0% 50%;}
     50%{background-position:100% 50%;}
     100%{background-position:0% 50%;}
 }
-
-/* Titolo */
 h1 {
     font-size: 4rem;
     color: white;
     text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
     text-align: center;
     margin-bottom: 50px;
-    background: linear-gradient(90deg, #fffa00, #ff6ec4, #6a5af9);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: titleAnim 3s ease-in-out infinite alternate;
 }
-
-@keyframes titleAnim {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-}
-
-/* Contenitore pulsanti */
 .menu {
     display: flex;
     flex-direction: column;
@@ -53,8 +36,6 @@ h1 {
     position: relative;
     z-index: 2;
 }
-
-/* Pulsanti stilizzati */
 .btn {
     padding: 20px 40px;
     font-size: 1.8rem;
@@ -70,40 +51,25 @@ h1 {
     text-align: center;
     text-decoration: none;
 }
-
 .btn:hover {
     transform: scale(1.1);
     box-shadow: 0 15px 25px rgba(0,0,0,0.5);
     background: linear-gradient(45deg, #ffb199, #6a5af9);
 }
-
 .btn:active {
     transform: scale(0.95);
 }
-
-/* Ellies sullo sfondo */
-#ellies-bg {
+#bgCanvas {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    opacity: 0.2;
+    top: 0;
+    left: 0;
     z-index: 1;
-}
-
-/* Particelle colorate */
-.particle {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.8;
-    pointer-events: none;
 }
 </style>
 </head>
 <body>
 
-<!-- Ellies sullo sfondo -->
-<canvas id="ellies-bg" width="600" height="600"></canvas>
+<canvas id="bgCanvas"></canvas>
 
 <div>
     <h1>Benvenuto su Ellies!</h1>
@@ -115,58 +81,45 @@ h1 {
 </div>
 
 <script>
-// Disegno Ellies sullo sfondo
-const canvas = document.getElementById("ellies-bg");
+const canvas = document.getElementById("bgCanvas");
 const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-function drawElliesBG() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // Tunica bianca
+function drawEllies(x, y, scale=1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
     ctx.fillStyle = "white";
     ctx.beginPath();
-    ctx.moveTo(300, 350);
-    ctx.lineTo(250, 500);
-    ctx.lineTo(350, 500);
+    ctx.moveTo(0, 100);
+    ctx.lineTo(-50, 250);
+    ctx.lineTo(50, 250);
     ctx.closePath();
     ctx.fill();
-
-    // Testa
     ctx.fillStyle = "#f1c27d";
     ctx.beginPath();
-    ctx.arc(300, 250, 50, 0, Math.PI*2);
+    ctx.arc(0, 0, 50, 0, Math.PI*2);
     ctx.fill();
-
-    // Barba
     ctx.strokeStyle = "#654321";
     ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.arc(300, 270, 30, 0, Math.PI, false);
+    ctx.arc(0, 20, 30, 0, Math.PI, false);
     ctx.stroke();
-
-    // Occhi
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(285, 240, 10, 0, Math.PI*2);
-    ctx.arc(315, 240, 10, 0, Math.PI*2);
-    ctx.fill();
     ctx.fillStyle = "black";
     ctx.beginPath();
-    ctx.arc(285, 240, 5, 0, Math.PI*2);
-    ctx.arc(315, 240, 5, 0, Math.PI*2);
+    ctx.arc(-15, -10, 5, 0, Math.PI*2);
+    ctx.arc(15, -10, 5, 0, Math.PI*2);
     ctx.fill();
+    ctx.restore();
 }
 
-drawElliesBG();
-
-// Particelle colorate in movimento
 const colors = ["#ff6ec4","#6a5af9","#fffa00","#00fff0","#ff7f50"];
 const particles = [];
-
 for(let i=0;i<50;i++){
     particles.push({
-        x: Math.random()*window.innerWidth,
-        y: Math.random()*window.innerHeight,
+        x: Math.random()*canvas.width,
+        y: Math.random()*canvas.height,
         size: Math.random()*8+4,
         color: colors[Math.floor(Math.random()*colors.length)],
         dx: (Math.random()-0.5)*1.5,
@@ -174,25 +127,30 @@ for(let i=0;i<50;i++){
     });
 }
 
-function drawParticles(){
+function animate(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.globalAlpha = 0.2;
+    drawEllies(canvas.width/2, canvas.height/2, 3);
+    ctx.globalAlpha = 1;
     particles.forEach(p=>{
         ctx.fillStyle = p.color;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
         ctx.fill();
-
         p.x += p.dx;
         p.y += p.dy;
-
-        if(p.x<0) p.x=canvas.width;
-        if(p.x>canvas.width) p.x=0;
-        if(p.y<0) p.y=canvas.height;
-        if(p.y>canvas.height) p.y=0;
+        if(p.x<0)p.x=canvas.width;
+        if(p.x>canvas.width)p.x=0;
+        if(p.y<0)p.y=canvas.height;
+        if(p.y>canvas.height)p.y=0;
     });
-    requestAnimationFrame(drawParticles);
+    requestAnimationFrame(animate);
 }
-
-drawParticles();
+animate();
+window.addEventListener("resize",()=>{
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
 </script>
 
 </body>
