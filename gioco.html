@@ -25,7 +25,7 @@ const scoreDiv = document.getElementById("score");
 const winDiv = document.getElementById("winMessage");
 
 // Aereo e Ellies
-let plane = {x:100, y:50, width:150, height:50, dx:3};
+let plane = {x:100, y:100, width:150, height:50, dx:3};
 let ellies = {x:0, y:0, width:60, height:100};
 
 // Palazzi
@@ -45,14 +45,24 @@ window.addEventListener("keydown",(e)=>{
 
 function drawPlane(){
     // Corpo aereo
-    ctx.fillStyle="gray";
+    ctx.fillStyle="#777";
     ctx.fillRect(plane.x, plane.y, plane.width, plane.height);
     // Ala
-    ctx.fillStyle="darkgray";
-    ctx.fillRect(plane.x+30, plane.y-20, 90, 20);
+    ctx.fillStyle="#555";
+    ctx.fillRect(plane.x+20, plane.y-20, 110, 20);
+    // Coda
+    ctx.fillStyle="#444";
+    ctx.fillRect(plane.x+plane.width-20, plane.y-15, 15, 40);
+    // Eliche (rotanti)
+    ctx.fillStyle="#222";
+    ctx.beginPath();
+    ctx.arc(plane.x, plane.y+plane.height/2, 10,0,Math.PI*2);
+    ctx.fill();
+
     // Ellies sopra aereo
     ellies.x = plane.x + plane.width/2 - ellies.width/2;
     ellies.y = plane.y - ellies.height;
+    // Corpo
     ctx.fillStyle="white";
     ctx.fillRect(ellies.x, ellies.y, ellies.width, ellies.height);
     // Testa
@@ -77,6 +87,12 @@ function drawPlane(){
     ctx.arc(ellies.x + ellies.width/2 -10, ellies.y-25, 2,0,Math.PI*2);
     ctx.arc(ellies.x + ellies.width/2 +10, ellies.y-25, 2,0,Math.PI*2);
     ctx.fill();
+    // Bocca
+    ctx.strokeStyle="red";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.arc(ellies.x + ellies.width/2, ellies.y-10, 10,0,Math.PI,false);
+    ctx.stroke();
 }
 
 function drawBuildings(){
@@ -139,6 +155,6 @@ animate();
 </body>
 </html>
 
-
+  
 
 
