@@ -2,62 +2,127 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Gioco dei Gavettoni</title>
+<title>Gioco dei Gavettoni Avanzato</title>
 <style>
-    body { margin: 0; }
-    canvas {
-        background: skyblue;
-        display: block;
-        margin: auto;
-    }
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; background: #87CEEB; } /* cielo azzurro */
 </style>
 </head>
 <body>
-
-<canvas id="game" width="600" height="400"></canvas>
+<canvas id="game" width="800" height="500"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let ellies = { x: 300, y: 300, size: 30 };
+// Giocatore Ellies
+let ellies = { x: 400, y: 450, size: 40, color: "orange" };
+
+// Gavettoni
 let gavettoni = [];
+
+// Torri
 let torri = [
-    {x:100, y:50, h:100},
-    {x:300, y:30, h:130},
-    {x:500, y:70, h:110}
+    {x:100, y:350, w:50, h:150, color:"purple"},
+    {x:350, y:300, w:50, h:200, color:"red"},
+    {x:600, y:320, w:50, h:180, color:"green"}
 ];
 
+let nuvole = [
+    {x:0, y:50, w:120, h:40},
+    {x:300, y:80, w:150, h:50},
+    {x:600, y:40, w:100, h:30}
+];
+
+let punteggio = 0;
+
+// Controlli
 document.addEventListener("keydown", e => {
-    if(e.key === "ArrowLeft") ellies.x -= 10;
-    if(e.key === "ArrowRight") ellies.x += 10;
-    if(e.key === " ") gavettoni.push({x: ellies.x, y: ellies.y});
+    if(e.key === "ArrowLeft" && ellies.x > ellies.size/2) ellies.x -= 15;
+    if(e.key === "ArrowRight" && ellies.x < canvas.width - ellies.size/2) ellies.x += 15;
+    if(e.key === " ") gavettoni.push({x: ellies.x, y: ellies.y - ellies.size/2, r:10});
 });
 
-function loop() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+// Funzione per disegnare Ellies
+function drawEllies() {
+    ctx.fillStyle = ellies.color;
+    ctx.beginPath();
+    ctx.arc(ellies.x, ellies.y, ellies.size, 0, Math.PI*2);
+    ctx.fill();
+    // Occhietti
+    ctx.fillStyle = "white";
+    ctx.beginPath();
+    ctx.arc(ellies.x - 10, ellies.y - 10, 5, 0, Math.PI*2);
+    ctx.arc(ellies.x + 10, ellies.y - 10, 5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.beginPath();
+    ctx.arc(ellies.x - 10, ellies.y - 10, 2, 0, Math.PI*2);
+    ctx.arc(ellies.x + 10, ellies.y - 10, 2, 0, Math.PI*2);
+    ctx.fill();
+}
 
-    // Disegna Ellies
-    ctx.fillStyle = "green";
-    ctx.fillRect(ellies.x - 15, ellies.y - 15, 30, 30);
-
-    // Disegna le torri
-    ctx.fillStyle = "purple";
+// Disegna torri
+function drawTorri() {
     torri.forEach(t => {
-        ctx.fillRect(t.x, t.y, 40, t.h);
+        ctx.fillStyle = t.color;
+        ctx.fillRect(t.x, t.y, t.w, t.h);
+        // Blocchi
+        ctx.strokeStyle = "black";
+        for(let i=0; i<t.h; i+=20){
+            ctx.strokeRect(t.x, t.y+i, t.w, 20);
+        }
     });
+}
 
-    // Disegna i gavettoni
-    ctx.fillStyle = "blue";
+// Disegna gavettoni e gestione collisione
+function drawGavettoni() {
     gavettoni.forEach((g, index) => {
-        g.y -= 5;
+        g.y -= 7;
+        ctx.fillStyle = "rgba(0, 100, 255, 0.7)";
         ctx.beginPath();
-        ctx.arc(g.x, g.y, 8, 0, Math.PI * 2);
+        ctx.arc(g.x, g.y, g.r, 0, Math.PI*2);
         ctx.fill();
-        // Rimuovi gavettoni fuori dal canvas
-        if(g.y < 0) gavettoni.splice(index, 1);
-    });
 
+        // Collisione con torri
+        torri.forEach(t => {
+            if(g.x > t.x && g.x < t.x + t.w && g.y - g.r < t.y + t.h && g.y + g.r > t.y){
+                gavettoni.splice(index,1);
+                punteggio += 10;
+            }
+        });
+
+        if(g.y < 0) gavettoni.splice(index,1);
+    });
+}
+
+// Disegna nuvole in movimento
+function drawNuvole() {
+    nuvole.forEach(n => {
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.ellipse(n.x, n.y, n.w/2, n.h/2, 0, 0, Math.PI*2);
+        ctx.fill();
+        n.x += 1;
+        if(n.x - n.w/2 > canvas.width) n.x = -n.w/2;
+    });
+}
+
+// Disegna punteggio
+function drawScore() {
+    ctx.fillStyle = "black";
+    ctx.font = "25px Arial";
+    ctx.fillText("Punteggio: " + punteggio, 10, 30);
+}
+
+// Loop principale
+function loop() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawNuvole();
+    drawTorri();
+    drawEllies();
+    drawGavettoni();
+    drawScore();
     requestAnimationFrame(loop);
 }
 
@@ -66,3 +131,4 @@ loop();
 
 </body>
 </html>
+
