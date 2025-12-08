@@ -2,159 +2,310 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<title>Gioco dei Gavettoni</title>
+<title>Platform 2D – Adventure</title>
 <style>
-body { margin:0; overflow:hidden; background:skyblue; font-family:Arial;}
-canvas { display:block; margin:auto; background:#87ceeb;}
-#score {position:absolute; top:10px; left:10px; font-size:2rem; color:white; text-shadow:2px 2px 5px black;}
-#winMessage {position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:4rem; color:yellow; text-shadow:3px 3px 10px black; display:none;}
+    body { margin:0; overflow:hidden; background:#000; }
+    canvas { display:block; background:#222; image-rendering:pixelated; }
 </style>
 </head>
 <body>
-<div id="score">Punteggio: 0</div>
-<div id="winMessage">ELLIES HA VINTO!!! 🎉</div>
-<canvas id="gameCanvas" width="800" height="600"></canvas>
+
+<canvas id="game" width="1600" height="900"></canvas>
+
 <script>
-const canvas = document.getElementById("gameCanvas");
+/* -------------------------------------------------
+   COSTANTI DI GIOCO
+------------------------------------------------- */
+const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
 
-let score = 0;
-const scoreDiv = document.getElementById("score");
-const winDiv = document.getElementById("winMessage");
+const GRAVITY = 1.2;
+let keys = {};
 
-// Aereo e Ellies
-let plane = {x:100, y:100, width:150, height:50, dx:3};
-let ellies = {x:0, y:0, width:60, height:100};
+document.addEventListener("keydown", e => keys[e.code] = true);
+document.addEventListener("keyup", e => keys[e.code] = false);
 
-// Palazzi
-const buildings = [];
-for(let i=0;i<6;i++){
-    let w = 80 + Math.random()*40;
-    let h = 150 + Math.random()*200;
-    buildings.push({x:50+i*200, y:canvas.height-h, width:w, height:h, destroyed:false});
-}
+let currentLevel = 0;
 
-// Gavettoni
-const balls = [];
+/* -------------------------------------------------
+   GIOCATORE (ARABO IN TUNICA – placeholder)
+------------------------------------------------- */
+class Player {
+    constructor() {
+        this.w = 60;
+        this.h = 110;
+        this.x = 200;
+        this.y = 0;
 
-window.addEventListener("keydown",(e)=>{
-    if(e.key===" ") balls.push({x:plane.x + plane.width/2, y:plane.y+20, radius:10, dy:7});
-});
+        this.vx = 0;
+        this.vy = 0;
 
-function drawPlane(){
-    // Corpo aereo
-    ctx.fillStyle="#777";
-    ctx.fillRect(plane.x, plane.y, plane.width, plane.height);
-    // Ala
-    ctx.fillStyle="#555";
-    ctx.fillRect(plane.x+20, plane.y-20, 110, 20);
-    // Coda
-    ctx.fillStyle="#444";
-    ctx.fillRect(plane.x+plane.width-20, plane.y-15, 15, 40);
-    // Eliche (rotanti)
-    ctx.fillStyle="#222";
-    ctx.beginPath();
-    ctx.arc(plane.x, plane.y+plane.height/2, 10,0,Math.PI*2);
-    ctx.fill();
+        this.speed = 10;
+        this.jumpForce = 25;
 
-    // Ellies sopra aereo
-    ellies.x = plane.x + plane.width/2 - ellies.width/2;
-    ellies.y = plane.y - ellies.height;
-    // Corpo
-    ctx.fillStyle="white";
-    ctx.fillRect(ellies.x, ellies.y, ellies.width, ellies.height);
-    // Testa
-    ctx.fillStyle="#f1c27d";
-    ctx.beginPath();
-    ctx.arc(ellies.x + ellies.width/2, ellies.y-20, 30,0,Math.PI*2);
-    ctx.fill();
-    // Barba
-    ctx.strokeStyle="#654321";
-    ctx.lineWidth=4;
-    ctx.beginPath();
-    ctx.arc(ellies.x + ellies.width/2, ellies.y-10, 20,0,Math.PI,false);
-    ctx.stroke();
-    // Occhi
-    ctx.fillStyle="white";
-    ctx.beginPath();
-    ctx.arc(ellies.x + ellies.width/2 -10, ellies.y-25, 5,0,Math.PI*2);
-    ctx.arc(ellies.x + ellies.width/2 +10, ellies.y-25, 5,0,Math.PI*2);
-    ctx.fill();
-    ctx.fillStyle="black";
-    ctx.beginPath();
-    ctx.arc(ellies.x + ellies.width/2 -10, ellies.y-25, 2,0,Math.PI*2);
-    ctx.arc(ellies.x + ellies.width/2 +10, ellies.y-25, 2,0,Math.PI*2);
-    ctx.fill();
-    // Bocca
-    ctx.strokeStyle="red";
-    ctx.lineWidth=2;
-    ctx.beginPath();
-    ctx.arc(ellies.x + ellies.width/2, ellies.y-10, 10,0,Math.PI,false);
-    ctx.stroke();
-}
+        this.canDouble = true;
+        this.onGround = false;
 
-function drawBuildings(){
-    buildings.forEach(b=>{
-        if(!b.destroyed){
-            ctx.fillStyle="#555";
-            ctx.fillRect(b.x,b.y,b.width,b.height);
-            // finestre
-            ctx.fillStyle="#fffae3";
-            for(let wx=5;wx<b.width-10;wx+=20){
-                for(let wy=5;wy<b.height-10;wy+=20){
-                    ctx.fillRect(b.x+wx,b.y+wy,10,10);
-                }
+        this.hp = 5;
+    }
+
+    spawn(x,y){
+        this.x = x;
+        this.y = y;
+    }
+
+    update() {
+        // movimento orizzontale
+        if (keys["ArrowRight"]) this.vx = this.speed;
+        else if (keys["ArrowLeft"]) this.vx = -this.speed;
+        else this.vx *= 0.8;
+
+        // salto
+        if (keys["Space"]) {
+            if (this.onGround) {
+                this.vy = -this.jumpForce;
+                this.onGround = false;
+                this.canDouble = true;
+            } else if (this.canDouble) {
+                this.vy = -this.jumpForce * 0.8;
+                this.canDouble = false;
             }
         }
-    });
+
+        // gravità
+        this.vy += GRAVITY;
+
+        // movimento
+        this.x += this.vx;
+        this.y += this.vy;
+
+        // collisione col terreno
+        if (this.y + this.h > canvas.height - 100) {
+            this.y = canvas.height - this.h - 100;
+            this.vy = 0;
+            this.onGround = true;
+        }
+
+        // limiti finestra
+        if (this.x < 0) this.x = 0;
+        if (this.x + this.w > canvas.width) this.x = canvas.width - this.w;
+
+        // raggiunge la fine del livello
+        if (this.x > canvas.width - 120) nextLevel();
+    }
+
+    draw() {
+        ctx.fillStyle = "#ffe4b5"; // pelle
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+
+        // tunica
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(this.x+10, this.y+20, this.w-20, this.h-30);
+    }
 }
 
-function drawBalls(){
-    balls.forEach((b,i)=>{
-        ctx.fillStyle="blue";
-        ctx.beginPath();
-        ctx.arc(b.x,b.y,b.radius,0,Math.PI*2);
-        ctx.fill();
-        b.y += b.dy;
+const player = new Player();
 
-        // Collisione con palazzi
-        buildings.forEach(bld=>{
-            if(!bld.destroyed && b.x>bld.x && b.x<bld.x+bld.width && b.y-b.radius<bld.y+bld.height && b.y+b.radius>bld.y){
-                bld.destroyed=true;
-                balls.splice(i,1);
-                score += 200;
-                scoreDiv.textContent="Punteggio: "+score;
-                if(score>=1000){
-                    buildings.forEach(b2=>b2.destroyed=true);
-                    winDiv.style.display="block";
-                }
-            }
-        });
+/* -------------------------------------------------
+   NEMICI SEMPLIFICATI
+------------------------------------------------- */
+class Enemy {
+    constructor(x,y){
+        this.x = x;
+        this.y = y;
+        this.w = 70;
+        this.h = 70;
+        this.vx = 3;
+    }
 
-        // fuori schermo
-        if(b.y>canvas.height) balls.splice(i,1);
-    });
+    update(){
+        this.x += this.vx;
+
+        if (this.x < 100 || this.x > canvas.width-200)
+            this.vx *= -1;
+
+        if (this.collide(player)) {
+            player.hp -= 1;
+            player.x -= 50; // knockback
+        }
+    }
+
+    collide(obj){
+        return !(obj.x+obj.w < this.x ||
+                 obj.x > this.x+this.w ||
+                 obj.y+obj.h < this.y ||
+                 obj.y > this.y+this.h);
+    }
+
+    draw(){
+        ctx.fillStyle = "red";
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+    }
 }
 
-function animate(){
+let enemies = [];
+
+/* -------------------------------------------------
+   BOSS DEL LIVELLO 10 – DJINN OSCURO
+------------------------------------------------- */
+class Boss {
+    constructor(){
+        this.x = 1100;
+        this.y = 450;
+        this.w = 200;
+        this.h = 300;
+        this.hp = 20;
+        this.phase = 1;
+    }
+
+    update(){
+        // attacco base
+        if (Math.random() < 0.01* this.phase) {
+            projectiles.push(new Projectile(this.x,this.y+100));
+        }
+
+        // collisione col player
+        if (this.collide(player)) {
+            player.hp -= 1;
+            player.x -= 80;
+        }
+
+        // cambio fase
+        if (this.hp <= 12) this.phase = 2;
+        if (this.hp <= 5) this.phase = 3;
+    }
+
+    collide(obj){
+        return !(obj.x+obj.w < this.x ||
+                 obj.x > this.x+this.w ||
+                 obj.y+obj.h < this.y ||
+                 obj.y > this.y+this.h);
+    }
+
+    draw(){
+        ctx.fillStyle = "#5500ff";
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+    }
+}
+
+class Projectile {
+    constructor(x,y){
+        this.x=x;
+        this.y=y;
+        this.vx = -8;
+        this.w=40;
+        this.h=20;
+    }
+
+    update(){
+        this.x += this.vx;
+
+        if (this.collide(player)) {
+            player.hp -= 1;
+            this.x = -999;
+        }
+    }
+
+    collide(obj){
+        return !(obj.x+obj.w < this.x ||
+                 obj.x > this.x+this.w ||
+                 obj.y+obj.h < this.y ||
+                 obj.y > this.y+this.h);
+    }
+
+    draw(){
+        ctx.fillStyle="purple";
+        ctx.fillRect(this.x,this.y,this.w,this.h);
+    }
+}
+
+let boss = null;
+let projectiles = [];
+
+/* -------------------------------------------------
+   LIVELLI 1–10
+------------------------------------------------- */
+const LEVELS = [
+    "Oasi del Deserto",
+    "Dune Danzanti",
+    "Tempio Antico",
+    "Caverne di Cristallo",
+    "Mercato Notturno",
+    "Giardini Reali",
+    "Città Dorata",
+    "Portali degli Spiriti",
+    "Fortezza del Sultano",
+    "Il Djinn Oscuro – BOSS"
+];
+
+function loadLevel(n){
+    enemies = [];
+    projectiles = [];
+    boss = null;
+
+    player.spawn(150,400);
+
+    // genera nemici base
+    for (let i=0;i<n+2;i++){
+        enemies.push(new Enemy(500 + i*200, 650));
+    }
+
+    // livello 10: boss
+    if (n === 9) boss = new Boss();
+}
+
+/* -------------------------------------------------
+   CAMBIO LIVELLO
+------------------------------------------------- */
+function nextLevel(){
+    currentLevel++;
+    if (currentLevel >= LEVELS.length) currentLevel = 0; // fine
+    loadLevel(currentLevel);
+}
+
+/* -------------------------------------------------
+   LOOP DI GIOCO
+------------------------------------------------- */
+loadLevel(0);
+
+function gameLoop(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    // Movimento aereo
-    plane.x += plane.dx;
-    if(plane.x + plane.width>canvas.width || plane.x<0) plane.dx*=-1;
 
-    drawPlane();
-    drawBuildings();
-    drawBalls();
-    requestAnimationFrame(animate);
+    // sfondo
+    const grd = ctx.createLinearGradient(0,0,0,canvas.height);
+    grd.addColorStop(0,"#0a0a0a");
+    grd.addColorStop(1,"#202020");
+    ctx.fillStyle = grd;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // HUD
+    ctx.fillStyle="#fff";
+    ctx.font="40px Arial";
+    ctx.fillText("Livello: " + LEVELS[currentLevel], 40,60);
+    ctx.fillText("HP: " + player.hp, 40,120);
+
+    // update/logica
+    player.update();
+    enemies.forEach(e=>e.update());
+    projectiles.forEach(p=>p.update());
+    if (boss) boss.update();
+
+    // draw
+    enemies.forEach(e=>e.draw());
+    projectiles.forEach(p=>p.draw());
+    if (boss) boss.draw();
+    player.draw();
+
+    requestAnimationFrame(gameLoop);
 }
-animate();
+
+gameLoop();
 </script>
-<p style="color:white; position:absolute; bottom:10px; left:10px;">Premi SPAZIO per lanciare i gavettoni</p>
+
 </body>
 </html>
 
-  
+
+
 
 
