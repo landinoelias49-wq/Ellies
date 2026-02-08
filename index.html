@@ -1,158 +1,34 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<title>Benvenuto su Ellies!</title>
-<style>
-body {
-    margin: 0;
-    font-family: 'Arial', sans-serif;
-    overflow: hidden;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #a18cd1, #fbc2eb);
-    background-size: 600% 600%;
-    animation: gradientBG 20s ease infinite;
-}
-@keyframes gradientBG {
-    0%{background-position:0% 50%;}
-    50%{background-position:100% 50%;}
-    100%{background-position:0% 50%;}
-}
-h1 {
-    font-size: 4rem;
-    color: white;
-    text-shadow: 2px 2px 15px rgba(0,0,0,0.6);
-    text-align: center;
-    margin-bottom: 50px;
-}
-.menu {
-    display: flex;
-    flex-direction: column;
-    gap: 25px;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-}
-.btn {
-    padding: 20px 40px;
-    font-size: 1.8rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    background: linear-gradient(45deg, #ff6ec4, #7873f5);
-    color: white;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-    transition: 0.3s;
-    width: 320px;
-    text-align: center;
-    text-decoration: none;
-}
-.btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 15px 25px rgba(0,0,0,0.5);
-    background: linear-gradient(45deg, #ffb199, #6a5af9);
-}
-.btn:active {
-    transform: scale(0.95);
-}
-#bgCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-}
-</style>
+    <meta charset="UTF-8">
+    <title>Elios Adventure</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<canvas id="bgCanvas"></canvas>
+    <!-- Titolo del gioco -->
+    <h1>Elios Adventure</h1>
 
-<div>
-    <h1>Benvenuto su Ellies!</h1>
-    <div class="menu">
-        <a class="btn" href="ellies.html">✨ Ellies Multicolor</a>
-        <a class="btn" href="gioco.html">🎮 Gioco dei Gavettoni</a>
-        <a class="btn" href="filmato.html">🎬 Filmato “ELLIES!!!”</a>
+    <!-- Informazioni di gioco -->
+    <div id="hud">
+        <span id="lives">❤️ Vite: 3</span>
+        <span id="score">⭐ Punteggio: 0</span>
+        <span id="level">🌍 Livello: 1</span>
     </div>
-</div>
 
-<script>
-const canvas = document.getElementById("bgCanvas");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+    <!-- Canvas del gioco -->
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
 
-function drawEllies(x, y, scale=1) {
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.scale(scale, scale);
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(0, 100);
-    ctx.lineTo(-50, 250);
-    ctx.lineTo(50, 250);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = "#f1c27d";
-    ctx.beginPath();
-    ctx.arc(0, 0, 50, 0, Math.PI*2);
-    ctx.fill();
-    ctx.strokeStyle = "#654321";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(0, 20, 30, 0, Math.PI, false);
-    ctx.stroke();
-    ctx.fillStyle = "black";
-    ctx.beginPath();
-    ctx.arc(-15, -10, 5, 0, Math.PI*2);
-    ctx.arc(15, -10, 5, 0, Math.PI*2);
-    ctx.fill();
-    ctx.restore();
-}
+    <!-- Istruzioni -->
+    <div id="instructions">
+        <p>⬅️ ➡️ Muovi Elios</p>
+        <p>⬆️ Salta</p>
+        <p>Ricarica la pagina per ricominciare</p>
+    </div>
 
-const colors = ["#ff6ec4","#6a5af9","#fffa00","#00fff0","#ff7f50"];
-const particles = [];
-for(let i=0;i<50;i++){
-    particles.push({
-        x: Math.random()*canvas.width,
-        y: Math.random()*canvas.height,
-        size: Math.random()*8+4,
-        color: colors[Math.floor(Math.random()*colors.length)],
-        dx: (Math.random()-0.5)*1.5,
-        dy: (Math.random()-0.5)*1.5
-    });
-}
-
-function animate(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    ctx.globalAlpha = 0.2;
-    drawEllies(canvas.width/2, canvas.height/2, 3);
-    ctx.globalAlpha = 1;
-    particles.forEach(p=>{
-        ctx.fillStyle = p.color;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-        ctx.fill();
-        p.x += p.dx;
-        p.y += p.dy;
-        if(p.x<0)p.x=canvas.width;
-        if(p.x>canvas.width)p.x=0;
-        if(p.y<0)p.y=canvas.height;
-        if(p.y>canvas.height)p.y=0;
-    });
-    requestAnimationFrame(animate);
-}
-animate();
-window.addEventListener("resize",()=>{
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-</script>
+    <!-- Script principale -->
+    <script src="game.js"></script>
 
 </body>
 </html>
-
